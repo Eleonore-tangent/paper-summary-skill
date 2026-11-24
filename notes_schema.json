@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StructuredPaperNotes",
+  "description": "一份论文的结构化笔记：章节对齐 + 字段化卡片 + 可检索知识点 + 证据回链 + 不确定项。",
+  "type": "object",
+  "required": ["paper_card", "sections", "knowledge_points", "uncertainty", "change_log"],
+  "properties": {
+    "paper_card": {
+      "type": "object",
+      "required": ["title", "research_question", "data", "methods", "key_findings", "limitations"],
+      "properties": {
+        "title": {"type": "string", "description": "论文标题（照抄原文，不做翻译改写）"},
+        "authors": {"type": "string"},
+        "year": {"type": "string"},
+        "venue": {"type": "string"},
+        "doi": {"type": "string"},
+        "research_question": {"type": "string", "description": "研究问题 / 目标，尽量照原文表述"},
+        "data": {"type": "string", "description": "数据 / 材料 / 实验对象"},
+        "methods": {"type": "array", "items": {"type": "string"}, "description": "方法及其关键条件（含让结论成立的前提条件）"},
+        "key_findings": {"type": "array", "items": {"type": "string"}, "description": "主要发现（含关键数值、效应方向）"},
+        "limitations": {"type": "array", "items": {"type": "string"}, "description": "局限、边界条件、未报告项"},
+        "evidence": {"$ref": "#/definitions/evidence"}
+      }
+    },
+    "sections": {
+      "type": "array",
+      "description": "按论文自身章节顺序，逐章记录；不得套用通用摘要模板。",
+      "items": {
+        "type": "object",
+        "required": ["id", "heading", "purpose", "content", "key_points", "evidence"],
+        "properties": {
+          "id": {"type": "string"},
+          "heading": {"type": "string", "description": "论文原文的章节标题"},
+          "page_range": {"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 2},
+          "purpose": {"type": "string", "description": "本章目的"},
+          "content": {"type": "string", "description": "本章内容摘要（方法/论证要点）"},
+          "results": {"type": "string", "description": "本章结果（若本章有）"},
+          "conclusion": {"type": "string", "description": "本章结论"},
+          "transition": {"type": "string", "description": "与前后章节的承接关系"},
+          "key_points": {"type": "array", "items": {"$ref": "#/definitions/key_point"}},
+          "evidence": {"$ref": "#/definitions/evidence"}
+        }
+      }
+    },
+    "knowledge_points": {
+      "type": "array",
+      "description": "可检索的知识点：概念/变量/方法/发现/局限，处理同义与缩写，避免重复。",
+      "items": {
+        "type": "object",
+        "required": ["id", "term", "definition", "type", "evidence", "status"],
+        "properties": {
+          "id": {"type": "string"},
+          "term": {"type": "string", "description": "术语 / 概念 / 变量名"},
+          "definition": {"type": "string"},
+          "type": {"enum": ["concept", "variable", "method", "finding", "limitation", "other"]},
+          "aliases": {"type": "array", "items": {"type": "string"}, "description": "缩写、同义表述"},
+          "evidence": {"$ref": "#/definitions/evidence"},
+          "status": {"enum": ["reported", "inferred", "not_reported", "uncertain"]}
+        }
+      }
+    },
+    "uncertainty": {
+      "type": "array",
+      "description": "未报告 / 无法判断 / 材料冲突 / 图表公式缺失 / 扫描件等问题，必须如实列出。",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {"enum": ["not_reported", "cannot_judge", "conflict", "missing_figure", "scan_issue", "encoding_issue", "other"]},
+          "description": {"type": "string"},
+          "evidence": {"$ref": "#/definitions/evidence"}
+        }
+      }
+    },
+    "change_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "step": {"type": "string"},
+          "note": {"type": "string"}
+        }
+      }
+    }
+  },
+  "definitions": {
+    "evidence": {
+      "type": "object",
+      "description": "证据锚点：至少给出 section 与 page；有则补充 paragraph / figure / table / equation / locator / quote。",
+      "properties": {
+        "section": {"type": "string"},
+        "page": {"type": "integer", "description": "PDF 物理页码（从 1 起）"},
+        "paragraph": {"type": ["integer", "string"]},
+        "figure": {"type": "string"},
+        "table": {"type": "string"},
+        "equation": {"type": "string"},
+        "locator": {"type": "string", "description": "人可读的定位描述，如 “第3页第2段，图2 左侧”"},
+        "quote": {"type": "string", "description": "关键原文短引文，用于复核"}
+      }
+    },
+    "key_point": {
+      "type": "object",
+      "required": ["text", "evidence"],
+      "properties": {
+        "text": {"type": "string"},
+        "evidence": {"$ref": "#/definitions/evidence"}
+      }
+    }
+  }
+}
